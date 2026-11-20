@@ -32,6 +32,16 @@ h1 b{background:var(--red);padding:0 .18em}
 .head h2{margin:0;font-size:26px;font-weight:900;letter-spacing:-.01em}
 .head span{color:var(--soft)}
 .head a{color:var(--hl);font-size:15px}
+.fixes{border:2px solid var(--red);background:#1c0f0f;border-radius:12px;padding:14px 16px;margin:0 0 16px}
+.fixes h3{margin:0 0 8px;font-size:18px;font-weight:900;color:#fff;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.fixes h3 b{background:var(--red);color:#fff;font-size:13px;padding:2px 8px;border-radius:6px}
+.fixes ol{margin:0;padding-left:20px;display:grid;gap:8px}
+.fixes li{color:#e6e6e6;font-size:15px}
+.fixes .w{font-weight:700;color:#fff}
+.fixes .ba{display:block;color:var(--soft);font-size:14px;margin-top:2px}
+.fixes .ba s{color:#9a9a9a}
+.fixes.none{border-color:var(--line);background:var(--panel)}
+.fixes.none h3{font-size:16px}
 .summary{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin:0 0 16px;color:#e6e6e6;white-space:pre-line}
 .days{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px}
 .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px 14px 18px;display:flex;flex-direction:column;gap:10px}
@@ -138,6 +148,11 @@ function detail(it){
    ${d.memo?`<p class="memo">메모: ${esc(d.memo)}</p>`:""}
   </div></details>`;
 }
+function fixesBox(wk){
+ if(!Array.isArray(wk.fixes))return "";
+ if(!wk.fixes.length)return `<div class="fixes none"><h3>스킬 결과를 그대로 썼어요 · 고친 부분 없음</h3></div>`;
+ return `<div class="fixes" role="note"><h3><b>필독</b>스킬 결과에서 고친 부분 ${wk.fixes.length}곳</h3><ol>${wk.fixes.map(f=>`<li><span class="w">${esc(f.item)}</span> · ${esc(f.why)}${f.before||f.after?`<span class="ba">${f.before?`<s>${esc(f.before)}</s>`:""}${f.before&&f.after?" → ":""}${f.after?esc(f.after):""}</span>`:""}</li>`).join("")}</ol></div>`;
+}
 function card(it){
  const {t,w}=md(it.date),today=it.date===todayKey,past=it.date<todayKey;
  return `<article class="card${today?" today":""}${past&&!today?" past":""}" data-go="${it.date}" tabindex="0" role="button" aria-label="${t} ${esc(it.hook)} 상세 보기">
@@ -155,6 +170,7 @@ function render(){
  const wk=weeks.find(w=>w.id===sel);
  document.getElementById("week").innerHTML=wk?`
   <div class="head"><h2>${esc(wk.label)}</h2><span>${esc(wk.note)}</span>${wk.doc?`<a href="${esc(wk.doc)}" target="_blank" rel="noopener">주간 제안서</a>`:""}</div>
+  ${fixesBox(wk)}
   ${wk.summary?`<p class="summary">${esc(wk.summary)}</p>`:""}
   <div class="days">${wk.items.map(card).join("")}</div>
   ${wk.items.some(it=>it.detail)?`<h3 class="detail-head">콘텐츠 상세</h3><p class="detail-sub">카드뉴스 장별 문구, 릴스 대본, 캡션을 그대로 옮길 수 있게 정리했어요.</p>${wk.items.map(detail).join("")}`:""}`:`<p class="empty">아직 등록된 주가 없어요</p>`;
