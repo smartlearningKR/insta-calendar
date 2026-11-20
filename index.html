@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>인스타 콘텐츠 캘린더</title>
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap">
+<style>
+/* VOICE quiet view-only schedule for a small team
+   IDEA the account's own card news: black slide, bold white type, one yellow highlight, one red box
+   PICTURE the selected week as five day cards side by side, today ringed
+   COLOUR fixed black world: #0c0c0c ground, white ink, grey panels, highlighter #FFF0C2, red #E5322D in the title only
+   TYPE Noto Sans KR 900 for title and hooks, 400/500 for text
+   LAYOUT title, week tabs, five cards in a row; past weeks stay in the tabs; phone stacks the cards */
+:root{color-scheme:dark;--bg:#0c0c0c;--panel:#161616;--line:#2a2a2a;--ink:#fff;--soft:#b5b5b5;--mute:#8a8a8a;--hl:#FFF0C2;--red:#E5322D}
+*{box-sizing:border-box;min-width:0}
+html,body{margin:0;background:var(--bg);color:var(--ink)}
+body{font:16px/1.55 "Noto Sans KR",system-ui,sans-serif;overflow-x:clip}
+.wrap{max-width:1240px;margin:0 auto;padding:clamp(24px,4vw,56px) max(5vw,16px)}
+h1{font-weight:900;font-size:clamp(30px,4.4vw,46px);line-height:1.05;letter-spacing:-.02em;margin:0}
+h1 b{background:var(--red);padding:0 .18em}
+.sub{color:var(--soft);margin:10px 0 0}
+.tabs{display:flex;gap:8px;overflow-x:auto;padding:4px 2px 10px;margin-top:28px;scrollbar-width:thin}
+.tab{flex:none;min-height:44px;padding:6px 16px;border-radius:999px;border:1px solid var(--line);background:transparent;color:var(--soft);font:500 15px "Noto Sans KR",sans-serif;cursor:pointer;white-space:nowrap}
+.tab b{color:var(--ink);font-weight:700;margin-right:6px}
+.tab[aria-selected=true]{background:var(--ink);color:#333;border-color:var(--ink)}
+.tab[aria-selected=true] b{color:#111}
+.tab:focus-visible,a:focus-visible{outline:3px solid var(--hl);outline-offset:2px}
+.head{display:flex;flex-wrap:wrap;gap:6px 16px;align-items:baseline;margin:18px 0 14px}
+.head h2{margin:0;font-size:26px;font-weight:900;letter-spacing:-.01em}
+.head span{color:var(--soft)}
+.head a{color:var(--hl);font-size:15px}
+.summary{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin:0 0 16px;color:#e6e6e6;white-space:pre-line}
+.days{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px 14px 18px;display:flex;flex-direction:column;gap:10px}
+.card.today{border:2px solid var(--hl)}
+.card.past{opacity:.62}
+.top{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.date{font-weight:900;font-size:22px;line-height:1;white-space:nowrap}
+.date small{font-size:14px;font-weight:500;color:var(--soft);margin-left:4px}
+.today-tag{font-size:12px;font-weight:700;color:#111;background:var(--hl);padding:1px 7px;border-radius:5px;white-space:nowrap}
+.kind{font-size:14px;color:var(--soft);display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.kind strong{color:var(--ink);font-weight:700}
+.ico{display:inline-block;background:var(--soft);border-radius:2px;flex:none}
+.ico.feed{width:11px;height:11px}
+.ico.reel{width:7px;height:13px}
+.hook{font-weight:900;font-size:18px;line-height:1.35;margin:0;letter-spacing:-.01em;text-wrap:pretty}
+.ins{margin:0;font-size:15px;color:#d8d8d8}
+.ins mark{background:var(--hl);color:#111;padding:1px 3px;border-radius:2px;box-decoration-break:clone;-webkit-box-decoration-break:clone}
+.meta{margin-top:auto;padding-top:8px;border-top:1px solid var(--line);font-size:13px;color:var(--mute);overflow-wrap:anywhere}
+.meta div+div{margin-top:2px}
+.empty{color:var(--soft);padding:40px 0}
+.foot{color:var(--mute);font-size:13px;margin-top:36px}
+@media(max-width:980px){.days{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:600px){.days{grid-template-columns:minmax(0,1fr)}.card{padding:14px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+ <h1>인스타 <b>콘텐츠</b> 캘린더</h1>
+ <p class="sub" id="sub">@ebslistening_official · 매주 월~금, 피드 3개와 릴스 2개</p>
+ <div class="tabs" id="tabs" role="tablist" aria-label="주차"></div>
+ <section id="week" aria-live="polite"><p class="empty">불러오는 중…</p></section>
+ <p class="foot" id="foot">매주 월요일에 새 주가 추가돼요. 지난 주는 위의 주차 버튼에서 언제든 다시 볼 수 있어요.</p>
+</div>
+<script>
+{
+const DOW=["일","월","화","수","목","금","토"];
+const pad=n=>String(n).padStart(2,"0");
+const now=new Date();
+const todayKey=`${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}`;
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const hl=s=>esc(s).replace(/\[\[(.+?)\]\]/g,"<mark>$1</mark>");
+const md=s=>{const d=new Date(s+"T00:00:00");return{t:`${d.getMonth()+1}/${d.getDate()}`,w:DOW[d.getDay()]}};
+let data=null,sel=null;
+
+function pickDefault(weeks){
+ const h=location.hash.replace("#w-","");
+ if(weeks.some(w=>w.id===h))return h;
+ const cur=weeks.find(w=>w.items.some(it=>it.date===todayKey));
+ if(cur)return cur.id;
+ const next=weeks.find(w=>w.items.length&&w.items[0].date>todayKey);
+ return (next||weeks[weeks.length-1]).id;
+}
+function card(it){
+ const {t,w}=md(it.date),today=it.date===todayKey,past=it.date<todayKey;
+ return `<article class="card${today?" today":""}${past&&!today?" past":""}">
+  <div class="top"><span class="date">${t}<small>${w}</small></span>${today?`<span class="today-tag">오늘</span>`:""}</div>
+  <div class="kind"><i class="ico ${it.format==="릴스"?"reel":"feed"}"></i><strong>${esc(it.format)}</strong><span>· ${esc(it.area)}</span></div>
+  <p class="hook">${esc(it.hook)}</p>
+  <p class="ins">${hl(it.insight)}</p>
+  ${it.file||it.note?`<div class="meta">${it.file?`<div>영상 ${esc(it.file)}</div>`:""}${it.note?`<div>${esc(it.note)}</div>`:""}</div>`:""}
+ </article>`;
+}
+function render(){
+ const weeks=data.weeks;
+ document.getElementById("tabs").innerHTML=weeks.map(w=>`<button class="tab" role="tab" data-id="${esc(w.id)}" aria-selected="${w.id===sel}"><b>${esc(w.label)}</b>${esc(w.note)}</button>`).join("");
+ const wk=weeks.find(w=>w.id===sel);
+ document.getElementById("week").innerHTML=wk?`
+  <div class="head"><h2>${esc(wk.label)}</h2><span>${esc(wk.note)}</span>${wk.doc?`<a href="${esc(wk.doc)}" target="_blank" rel="noopener">주간 제안서</a>`:""}</div>
+  ${wk.summary?`<p class="summary">${esc(wk.summary)}</p>`:""}
+  <div class="days">${wk.items.map(card).join("")}</div>`:`<p class="empty">아직 등록된 주가 없어요</p>`;
+ if(data.updated)document.getElementById("foot").textContent=`마지막 업데이트 ${data.updated.replace(/^(\d+)-0?(\d+)-0?(\d+)$/,"$1년 $2월 $3일")} · 매주 월요일에 새 주가 추가되고, 지난 주는 위의 주차 버튼에서 다시 볼 수 있어요.`;
+ const on=document.querySelector('.tab[aria-selected="true"]');
+ if(on)on.scrollIntoView({block:"nearest",inline:"center"});
+}
+document.getElementById("tabs").addEventListener("click",e=>{
+ const b=e.target.closest(".tab");if(!b)return;
+ sel=b.dataset.id;history.replaceState(null,"","#w-"+sel);render();
+});
+window.addEventListener("hashchange",()=>{if(data){sel=pickDefault(data.weeks);render()}});
+fetch("data/weeks.json",{cache:"no-store"}).then(r=>{if(!r.ok)throw new Error(r.status);return r.json()}).then(d=>{
+ data=d;data.weeks.sort((a,b)=>a.id<b.id?-1:1);sel=pickDefault(data.weeks);render();
+}).catch(()=>{document.getElementById("week").innerHTML=`<p class="empty">일정을 불러오지 못했어요. 잠시 후 새로고침해 주세요.</p>`});
+}
+</script>
+</body>
+</html>
