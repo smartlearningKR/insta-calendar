@@ -171,7 +171,7 @@ function render(){
  document.getElementById("week").innerHTML=wk?`
   <div class="head"><h2>${esc(wk.label)}</h2><span>${esc(wk.note)}</span>${wk.doc?`<a href="${esc(wk.doc)}" target="_blank" rel="noopener">주간 제안서</a>`:""}</div>
   ${fixesBox(wk)}
-  ${wk.summary?`<p class="summary">${esc(wk.summary)}</p>`:""}
+  ${wk.summary?`<p class="summary"><strong style="display:block;margin-bottom:4px">지난 게시물 성과 분석</strong>${esc(wk.summary)}</p>`:""}
   <div class="days">${wk.items.map(card).join("")}</div>
   ${wk.items.some(it=>it.detail)?`<h3 class="detail-head">콘텐츠 상세</h3><p class="detail-sub">카드뉴스 장별 문구, 릴스 대본, 캡션을 그대로 옮길 수 있게 정리했어요.</p>${wk.items.map(detail).join("")}`:""}`:`<p class="empty">아직 등록된 주가 없어요</p>`;
  if(data.updated)document.getElementById("foot").textContent=`마지막 업데이트 ${data.updated.replace(/^(\d+)-0?(\d+)-0?(\d+)$/,"$1년 $2월 $3일")} · 매주 월요일에 새 주가 추가되고, 지난 주는 위의 주차 버튼에서 다시 볼 수 있어요.`;
