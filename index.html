@@ -154,7 +154,8 @@ function detail(it){
  const {t,w}=md(it.date),d=it.detail;
  if(!d)return "";
  let tbl="";
- if(d.slides)tbl=`<div><h4>카드뉴스 ${d.slides.length}장</h4>${d.lead?`<p class="memo" style="margin-bottom:8px">${esc(d.lead)}</p>`:""}<div class="tbl"><table class="stack"><thead><tr><th>장</th><th>제목</th><th>본문</th><th>형광 박스</th><th>마지막 줄</th></tr></thead><tbody>${d.slides.map((s,i)=>`<tr>${cell(i+1,"장","n")}${cell(esc(s.title),"제목","t")}${cell(esc(s.body),"본문")}${cell(hlCell(s.highlight),"형광 박스","h")}${cell(esc(s.last),"마지막 줄")}</tr>`).join("")}</tbody></table></div></div>`;
+ if(d.slides){const mag=d.slides.some(s=>s.layout||s.photo);
+  tbl=`<div><h4>카드뉴스 ${d.slides.length}장</h4>${d.lead?`<p class="memo" style="margin-bottom:8px">${esc(d.lead)}</p>`:""}<div class="tbl"><table class="stack"><thead><tr><th>장</th>${mag?"<th>레이아웃</th>":""}<th>제목</th><th>본문</th><th>형광 박스</th><th>마지막 줄</th>${mag?"<th>들어갈 사진</th>":""}</tr></thead><tbody>${d.slides.map((s,i)=>`<tr>${cell(i+1,"장","n")}${mag?cell(esc(s.layout||""),"레이아웃"):""}${cell(esc(s.title),"제목","t")}${cell(esc(s.body),"본문")}${cell(hlCell(s.highlight),"형광 박스","h")}${cell(esc(s.last),"마지막 줄")}${mag?cell(esc(s.photo||"없음"),"들어갈 사진"):""}</tr>`).join("")}</tbody></table></div></div>`;}
  if(d.scenes)tbl=`<div><h4>릴스 대본${it.file?` · ${esc(it.file)}`:""}</h4><div class="tbl"><table class="stack"><thead><tr><th>시간</th><th>큰 자막</th><th>작은 자막 / 형광</th></tr></thead><tbody>${d.scenes.map(s=>`<tr>${cell(esc(s.time),"시간","n")}${cell(esc(s.big),"큰 자막","t")}${cell(esc(s.small),"작은 자막 / 형광")}</tr>`).join("")}</tbody></table></div></div>`;
  return `<details class="item" id="c-${it.date}" open>
   <summary><span class="when">${t}<small>${w}요일</small></span><span class="ttl"><small>${esc(it.format)} · ${esc(it.area)}</small>${esc(it.hook)}</span><span class="tog"></span></summary>
