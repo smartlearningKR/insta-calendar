@@ -42,6 +42,16 @@ h1 b{background:var(--red);color:#fff;padding:0 .18em}
 .fixes .ba s{color:#999}
 .fixes.none{border-color:var(--line);background:var(--panel)}
 .fixes.none h3{font-size:16px}
+.rbtn{font:inherit;font-size:15px;color:#fff;background:var(--link);border:0;border-radius:999px;padding:5px 14px;cursor:pointer}
+.rbtn:hover{filter:brightness(1.1)}
+.rbtn:focus-visible{outline:3px solid var(--hl);outline-offset:2px}
+#rdlg{border:0;border-radius:16px;padding:0;width:min(720px,92vw);max-height:86vh;box-shadow:0 20px 60px rgba(0,0,0,.25)}
+#rdlg::backdrop{background:rgba(0,0,0,.35)}
+#rdlg .dhead{position:sticky;top:0;background:#fff;display:flex;justify-content:space-between;align-items:center;gap:12px;padding:16px 20px;border-bottom:1px solid var(--line)}
+#rdlg .dhead h3{margin:0;font-size:18px}
+.dclose{font:inherit;font-size:20px;background:none;border:0;cursor:pointer;color:var(--soft);padding:4px 8px}
+#rdlg .report{margin:16px 20px}
+.report.old{border-left-color:var(--line)}
 .report{border:1px solid var(--line);border-left:4px solid var(--link);border-radius:12px;padding:14px 18px;margin:0 0 16px;background:#fff}
 .report h3{margin:0 0 6px;font-size:17px}
 .report h4{margin:12px 0 4px;font-size:14px;color:var(--link)}
@@ -191,10 +201,12 @@ function render(){
  document.getElementById("tabs").innerHTML=weeks.map(w=>`<button class="tab" role="tab" data-id="${esc(w.id)}" aria-selected="${w.id===sel}"><b>${esc(w.label)}</b>${esc(w.note)}</button>`).join("");
  const wk=weeks.find(w=>w.id===sel);
  document.getElementById("week").innerHTML=wk?`
-  <div class="head"><h2>${esc(wk.label)}</h2><span>${esc(wk.note)}</span>${wk.doc?`<a href="${esc(wk.doc)}" target="_blank" rel="noopener">주간 제안서</a>`:""}</div>
+  <div class="head"><h2>${esc(wk.label)}</h2><span>${esc(wk.note)}</span>${wk.doc?`<a href="${esc(wk.doc)}" target="_blank" rel="noopener">주간 제안서</a>`:""}${wk.report||wk.summary||wk.id>="2026-11-30"?`<button type="button" class="rbtn" id="rbtn">지난주 결과 · 이번 주 계획</button>`:""}</div>
   ${fixesBox(wk)}
-  ${reportBox(wk)}
-  ${wk.summary?`<p class="summary"><strong style="display:block;margin-bottom:4px">지난 게시물 성과 분석</strong>${esc(wk.summary)}</p>`:""}
+  <dialog id="rdlg" aria-labelledby="rdlg-t"><div class="dhead"><h3 id="rdlg-t">${esc(wk.label)} · 지난주 결과와 이번 주 계획</h3><button type="button" class="dclose" aria-label="닫기">✕</button></div>
+   ${reportBox(wk)}
+   ${wk.summary?`<section class="report old"><h3>지난 게시물 성과 분석${wk.report?" (이전 분석)":""}</h3><p style="white-space:pre-line;color:#262626">${esc(wk.summary)}</p></section>`:""}
+  </dialog>
   <div class="days">${wk.items.map(card).join("")}</div>
   ${wk.items.some(it=>it.detail)?`<h3 class="detail-head">콘텐츠 상세</h3><p class="detail-sub">카드뉴스 장별 문구, 릴스 대본, 캡션을 그대로 옮길 수 있게 정리했어요.</p>${wk.items.map(detail).join("")}`:""}`:`<p class="empty">아직 등록된 주가 없어요</p>`;
  if(data.updated)document.getElementById("foot").textContent=`마지막 업데이트 ${data.updated.replace(/^(\d+)-0?(\d+)-0?(\d+)$/,"$1년 $2월 $3일")} · 매주 월요일에 새 주가 추가되고, 지난 주는 위의 주차 버튼에서 다시 볼 수 있어요.`;
@@ -204,6 +216,11 @@ function render(){
 document.getElementById("tabs").addEventListener("click",e=>{
  const b=e.target.closest(".tab");if(!b)return;
  sel=b.dataset.id;history.replaceState(null,"","#w-"+sel);render();
+});
+document.addEventListener("click",e=>{
+ const d=document.getElementById("rdlg");
+ if(e.target.closest("#rbtn")&&d){d.showModal();return;}
+ if(d&&(e.target.closest(".dclose")||e.target===d))d.close();
 });
 function go(date){
  const el=document.getElementById("c-"+date);if(!el)return;
