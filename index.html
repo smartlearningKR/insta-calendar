@@ -49,7 +49,7 @@ h1 b{background:var(--red);color:#fff;padding:0 .18em}
 .report li{margin:3px 0}
 .report .ba{display:block;color:var(--soft);font-size:14px}
 .report p{margin:0;color:var(--soft)}
-.report.empty{border-left-color:var(--line);background:var(--panel)}
+.report.wait{border-left-color:var(--line);background:var(--panel)}
 .summary{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin:0 0 16px;color:#262626;white-space:pre-line}
 .days{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px}
 .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px 14px 18px;display:flex;flex-direction:column;gap:10px}
@@ -166,7 +166,7 @@ function reportBox(wk){
  if(!r){
   if(wk.id<"2026-11-30")return "";
   const d=wk.id.replace(/^\d+-0?(\d+)-0?(\d+)$/,"$1/$2");
-  return `<section class="report empty"><h3>월요일 보고 · ${esc(d)}</h3><p>${esc(d)}(월) 오전에 지난주 결과(ig-audit)와 이번 주 계획(ig-plan)이 여기에 채워져요</p></section>`;
+  return `<section class="report wait"><h3>월요일 보고 · ${esc(d)}</h3><p>${esc(d)}(월) 오전에 지난주 결과(ig-audit)와 이번 주 계획(ig-plan)이 여기에 채워져요</p></section>`;
  }
  const list=a=>Array.isArray(a)&&a.length?`<ul>${a.map(x=>`<li>${esc(x)}</li>`).join("")}</ul>`:"";
  const ch=Array.isArray(r.changes)?(r.changes.length?`<ol>${r.changes.map(c=>`<li><b>${esc(c.item)}</b>${c.why?` · ${esc(c.why)}`:""}${c.before||c.after?`<span class="ba">${c.before?`<s>${esc(c.before)}</s>`:""}${c.before&&c.after?" → ":""}${c.after?esc(c.after):""}</span>`:""}</li>`).join("")}</ol>`:`<p>분석 결과 바꾼 콘텐츠는 없어요</p>`):"";
